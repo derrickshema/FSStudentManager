@@ -1,24 +1,25 @@
-from sqlmodel import SQLModel, Field, Session, select
+from sqlmodel import Session, select
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..models.user import User
 from ..routes.auth_routes import get_current_user
 
 from ..db.session import get_session
-from ..models.student import Student
+from ..models.student import Student, StudentCreate, StudentRead, StudentUpdate
 router = APIRouter(prefix="/students", tags=["Students"])
 
 @router.post("/", response_model=Student, status_code=status.HTTP_201_CREATED)
-async def create_student(student: Student, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+async def create_student(student: StudentCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """
     Creates a new student in the database.
     """
-    session.add(student)
+    new_student = Student.model_validate(student)
+    session.add(new_student)
     session.commit()
-    session.refresh(student)
-    return student
+    session.refresh(new_student)
+    return new_student
 
-@router.get("/", response_model=list[Student])
+@router.get("/", response_model=list[StudentRead])
 async def get_students(session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """
     Fetches all students from the database.
@@ -26,7 +27,7 @@ async def get_students(session: Session = Depends(get_session), current_user: Us
     students = session.exec(select(Student)).all()
     return students
 
-@router.get("/{student_id}", response_model=Student)
+@router.get("/{student_id}", response_model=StudentRead)
 async def get_student(student_id: int, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """
     Fetches a student by ID from the database.
@@ -37,7 +38,7 @@ async def get_student(student_id: int, session: Session = Depends(get_session), 
     return student
 
 @router.put("/{student_id}", response_model=Student)
-async def update_student(student_id: int, updated_student: Student, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+async def update_student(student_id: int, updated_student: StudentUpdate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     """
     Updates a student's information in the database.
     """

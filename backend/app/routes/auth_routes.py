@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 import os
 from ..db.session import get_session
-from ..models.user import User, UserCreate, UserResponse, Token # Import new models
+from ..models.user import User, UserCreate, UserRead, Token # Import new models
 from ..utilities.auth_utils import verify_password, hash_password, create_access_token, decode_access_token
 
 # Initialize OAuth2PasswordBearer
@@ -41,7 +41,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), session: Session
     return user
 
 # --- User Registration Endpoint ---
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_user(user_in: UserCreate, session: Session = Depends(get_session)):
     """
     Registers a new user.
@@ -92,7 +92,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 # --- Protected Endpoint Example (for testing auth) ---
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserRead)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     Retrieves the current authenticated user's information.
